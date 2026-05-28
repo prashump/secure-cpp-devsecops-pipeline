@@ -24,7 +24,6 @@ jobs:
           g++ \
           clang-tidy \
           cppcheck \
-          docker.io \
           python3-pip
 
     - name: Install Semgrep
