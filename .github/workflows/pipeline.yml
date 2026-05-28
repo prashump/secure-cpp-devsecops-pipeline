@@ -1,0 +1,104 @@
+name: Secure C++ DevSecOps Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-scan:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Pre-Create Reports Directory
+      run: mkdir -p reports
+
+    - name: Install Dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          cmake \
+          g++ \
+          clang-tidy \
+          cppcheck \
+          docker.io \
+          python3-pip
+
+    - name: Install Semgrep
+      run: |
+        python3 -m pip install semgrep
+
+    - name: Install Trivy
+      run: |
+        sudo apt-get install -y wget apt-transport-https gnupg lsb-release
+        wget -qO - https://github.io | gpg --dearmor | sudo tee /usr/share/keyrings/trivy.gpg > /dev/null
+        echo "deb [signed-by=/usr/share/keyrings/trivy.gpg] https://github.io $(lsb_release -sc) main" | sudo tee /etc/apt/sources.list.d/trivy.list
+        sudo apt-get update
+        sudo apt-get install -y trivy
+
+    - name: Configure Build
+      run: |
+        mkdir build
+        cd build
+        cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
+
+    - name: Build Application
+      run: |
+        cd build
+        cmake --build .
+
+    - name: Run Tests
+      run: |
+        cd build
+        ctest
+
+    - name: Run Cppcheck
+      run: |
+        cd build
+        cppcheck \
+          --enable=all \
+          --xml \
+          --xml-version=2 \
+          --project=compile_commands.json \
+          2> ../reports/cppcheck.xml
+
+    - name: Run Clang-Tidy
+      run: |
+        cd build
+        # Fixed pathing to use build compilation database cleanly
+        clang-tidy ../src/*.cpp -p . > ../reports/clang-tidy.txt
+
+    - name: Run Semgrep (SAST)
+      run: |
+        # Fixed: Forced scanning via explicit path and bypasses any tracking constraints
+        semgrep scan \
+          --config auto \
+          --no-git-ignore \
+          --sarif \
+          --output reports/semgrep.sarif \
+          src/
+
+    - name: Build Docker Image
+      run: |
+        docker build -t secure-cpp-app .
+
+    - name: Run Trivy (Container Vulnerabilities)
+      run: |
+        trivy image \
+          --format json \
+          --output reports/trivy.json \
+          secure-cpp-app
+
+    - name: Generate Summary Report
+      run: |
+        python3 scripts/generate_report.py
+
+    - name: Upload Security Reports
+      uses: actions/upload-artifact@v4
+      with:
+        name: security-reports
+        path: reports/
+

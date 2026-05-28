@@ -1,0 +1,19 @@
+cmake_minimum_required(VERSION 3.10)
+
+project(SecureCppDevSecOps)
+
+set(CMAKE_CXX_STANDARD 17)
+
+add_executable(app
+    src/main.cpp
+    src/calculator.cpp
+)
+
+add_executable(test_app
+    tests/test_calculator.cpp
+    src/calculator.cpp
+)
+
+enable_testing()
+
+add_test(NAME CalculatorTests COMMAND test_app)

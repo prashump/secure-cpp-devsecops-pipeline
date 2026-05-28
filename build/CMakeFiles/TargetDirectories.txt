@@ -1,0 +1,5 @@
+/home/ec2-user/secure-cpp-devsecops-pipeline/build/CMakeFiles/app.dir
+/home/ec2-user/secure-cpp-devsecops-pipeline/build/CMakeFiles/test_app.dir
+/home/ec2-user/secure-cpp-devsecops-pipeline/build/CMakeFiles/test.dir
+/home/ec2-user/secure-cpp-devsecops-pipeline/build/CMakeFiles/edit_cache.dir
+/home/ec2-user/secure-cpp-devsecops-pipeline/build/CMakeFiles/rebuild_cache.dir
