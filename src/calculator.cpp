@@ -12,3 +12,5 @@ int Calculator::divide(int a, int b) {
 
     return a / b;
 }
+
+// Additional methods can be implemented here
